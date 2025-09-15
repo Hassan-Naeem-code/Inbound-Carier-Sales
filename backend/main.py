@@ -12,7 +12,7 @@ api_key_header = APIKeyHeader(name="X-API-Key")
 app = FastAPI(title="HappyRobot Inbound Carrier API")
 
 # Load data from JSON
-with open("loads.json") as f:
+with open("data/loads.json") as f:
     LOADS = json.load(f)
 
 def get_api_key(api_key: str = Depends(api_key_header)):
@@ -50,7 +50,7 @@ def verify_mc(mc_number: str):
 @app.post("/log_negotiation", dependencies=[Depends(get_api_key)])
 def log_negotiation(data: dict):
     # For demo, just print or append to a file
-    with open("negotiations.log", "a") as f:
+    with open("data/negotiations.log", "a") as f:
         f.write(json.dumps(data) + "\n")
     return {"status": "logged"}
 
@@ -58,7 +58,7 @@ def log_negotiation(data: dict):
 def get_metrics():
     # Demo: count negotiations
     try:
-        with open("negotiations.log") as f:
+        with open("data/negotiations.log") as f:
             lines = f.readlines()
         return {"negotiations": len(lines)}
     except FileNotFoundError:

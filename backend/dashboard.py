@@ -19,7 +19,7 @@ else:
 
 # Negotiation log (simple display)
 try:
-    with open("backend/negotiations.log") as f:
+    with open("data/negotiations.log") as f:
         lines = f.readlines()
     st.header("Negotiation Log")
     for line in lines[-10:]:

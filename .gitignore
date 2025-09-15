@@ -1,72 +1,33 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-env/
-build/
-develop-eggs/
+# Node/NestJS
+node_modules/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Environment variables
+.env
+.env.*
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# mypy
-.mypy_cache/
-.dmypy.json
-
-# VS Code
-.vscode/
-
-# Docker
+# Logs
 *.log
-negotiations.log
+logs/
+*.log.*
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Streamlit
-.streamlit/
+# VS Code
+.vscode/
 
-# Environment variables
-.env
+# Build artifacts
+build/
+tmp/
+temp/
 
-# Ignore loads.json if you want to keep it private
-# loads.json
+# Ignore data files if you want to keep them private
+# data/loads.json
+# data/negotiations.log
