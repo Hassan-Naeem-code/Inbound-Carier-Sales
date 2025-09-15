@@ -1,11 +1,7 @@
-# Node/NestJS
-node_modules/
-dist/
-coverage/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Environment variables
 .env
@@ -13,8 +9,8 @@ pnpm-debug.log*
 
 # Logs
 *.log
-logs/
-*.log.*
+backend/data/negotiations.log
+backend/data/*.log
 
 # OS files
 .DS_Store
@@ -23,11 +19,14 @@ Thumbs.db
 # VS Code
 .vscode/
 
+# Streamlit
+.streamlit/
+
 # Build artifacts
 build/
 tmp/
 temp/
 
 # Ignore data files if you want to keep them private
-# data/loads.json
-# data/negotiations.log
+# backend/data/loads.json
+
