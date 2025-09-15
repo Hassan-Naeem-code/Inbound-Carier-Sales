@@ -1,0 +1,32 @@
+[
+  {
+    "load_id": "L001",
+    "origin": "Chicago, IL",
+    "destination": "Dallas, TX",
+    "pickup_datetime": "2025-09-10T08:00:00",
+    "delivery_datetime": "2025-09-12T17:00:00",
+    "equipment_type": "Dry Van",
+    "loadboard_rate": 2200,
+    "notes": "No hazmat. Flexible pickup.",
+    "weight": 42000,
+    "commodity_type": "Electronics",
+    "num_of_pieces": 24,
+    "miles": 980,
+    "dimensions": "48x102x110"
+  },
+  {
+    "load_id": "L002",
+    "origin": "Atlanta, GA",
+    "destination": "Miami, FL",
+    "pickup_datetime": "2025-09-11T09:00:00",
+    "delivery_datetime": "2025-09-13T15:00:00",
+    "equipment_type": "Reefer",
+    "loadboard_rate": 1800,
+    "notes": "Refrigerated. Strict delivery window.",
+    "weight": 38000,
+    "commodity_type": "Produce",
+    "num_of_pieces": 20,
+    "miles": 660,
+    "dimensions": "53x102x110"
+  }
+]

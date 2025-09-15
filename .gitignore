@@ -8,9 +8,9 @@ __pycache__/
 .env.*
 
 # Logs
-*.log
-backend/data/negotiations.log
-backend/data/*.log
+data/negotiations.log
+data/*.log
+# data/loads.json
 
 # OS files
 .DS_Store

@@ -27,7 +27,7 @@ This API powers the inbound carrier sales automation for Acme Logistics using th
 3. Access the API at `http://localhost:8000` (use `X-API-Key: test-api-key` in requests).
 4. Run the dashboard:
    ```sh
-   streamlit run backend/dashboard.py
+   streamlit run dashboard.py
    ```
 
 ## HTTPS Setup (Local)
@@ -62,11 +62,11 @@ To run with HTTPS locally (self-signed):
   ```
 
 ## Dashboard
-- Run with: `streamlit run backend/dashboard.py`
+- Run with: `streamlit run dashboard.py`
 - Shows negotiation metrics and recent logs.
 
 ## Reproducing Deployment
-- All dependencies are in `backend/requirements.txt` and the Dockerfile.
+- All dependencies are in `requirements.txt` and the Dockerfile.
 - For cloud, use the Dockerfile and set environment variables as needed.
 
 ---
