@@ -30,3 +30,4 @@ temp/
 # Ignore data files if you want to keep them private
 # backend/data/loads.json
 
+CI_CD_SETUP.md
