@@ -77,9 +77,8 @@ jobs:
       env:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       run: |
-        echo "🔐 Using FLY_API_TOKEN for authentication..."
-        echo "🚀 Deploying to Fly.io..."
-        flyctl deploy --remote-only
+        echo "� Deploying to Fly.io with access token..."
+        flyctl deploy --remote-only --access-token "$FLY_API_TOKEN"
         
     - name: Verify deployment
       run: |
