@@ -1,18 +1,35 @@
 import requests
 import os
 from textblob import TextBlob
+from services.fmcsa import FMCSAService
+from core.config import Config
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
-API_KEY = os.getenv("API_KEY", "test-api-key")
-HEADERS = {"X-API-Key": API_KEY}
+API_URL = Config.API_URL
+HEADERS = {"X-API-Key": Config.API_KEY}
 
 class CarrierAgent:
     def __init__(self):
         self.negotiation_log = []
+        self.fmcsa_service = FMCSAService()
 
     def verify_mc(self, mc_number):
-        resp = requests.post(f"{API_URL}/verify_mc", json={"mc_number": mc_number}, headers=HEADERS)
-        return resp.json()
+        """Verify MC number using real FMCSA API"""
+        try:
+            # Use the enhanced FMCSA service
+            result = self.fmcsa_service.verify_mc_number(mc_number)
+            return result
+        except Exception as e:
+            # Fallback to API endpoint if direct service fails
+            try:
+                resp = requests.post(f"{API_URL}/verify_mc", json={"mc_number": mc_number}, headers=HEADERS)
+                return resp.json()
+            except:
+                return {
+                    "eligible": False,
+                    "mc_number": mc_number,
+                    "status": "error",
+                    "message": f"Verification failed: {str(e)}"
+                }
 
     def search_loads(self, equipment_type=None, origin=None, destination=None):
         params = {}
@@ -56,14 +73,3 @@ class CarrierAgent:
 
     def log_negotiation(self, data):
         requests.post(f"{API_URL}/log_negotiation", json=data, headers=HEADERS)
-
-# Example usage:
-# agent = CarrierAgent()
-# mc_status = agent.verify_mc("123456")
-# if mc_status["eligible"]:
-#     loads = agent.search_loads(equipment_type="Dry Van", origin="Chicago, IL")
-#     chosen_load = loads[0]
-#     negotiation = agent.negotiate(chosen_load, initial_offer=2100)
-#     outcome = agent.classify_outcome(negotiation)
-#     sentiment = agent.classify_sentiment("Thanks for your help, I appreciate it!")
-#     agent.log_negotiation({"mc_number": "123456", "load_id": chosen_load["load_id"], **negotiation, "outcome": outcome, "sentiment": sentiment})

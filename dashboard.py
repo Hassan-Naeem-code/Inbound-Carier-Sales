@@ -1,10 +1,11 @@
 import streamlit as st
 import requests
+import json
 import os
+from core.config import Config
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
-API_KEY = os.getenv("API_KEY", "test-api-key")
-HEADERS = {"X-API-Key": API_KEY}
+API_URL = Config.API_URL
+HEADERS = {"X-API-Key": Config.API_KEY}
 
 st.title("Inbound Carrier Sales Dashboard")
 

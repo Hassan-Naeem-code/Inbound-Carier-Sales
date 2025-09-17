@@ -3,3 +3,5 @@ uvicorn
 streamlit
 textblob
 python-dotenv
+requests
+pydantic

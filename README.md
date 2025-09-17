@@ -22,37 +22,77 @@ The application is deployed on Fly.io with automated health checks and optimized
 
 ### Example API Usage
 ```bash
-# Health check
+# Health check (no auth required)
 curl https://happyrobot-inbound.fly.dev/health
 
-# Get loads (requires API key)
+# Get loads (requires API key from .env)
 curl -H "X-API-Key: your-api-key" https://happyrobot-inbound.fly.dev/loads
 
 # Get specific load
 curl -H "X-API-Key: your-api-key" https://happyrobot-inbound.fly.dev/load/L001
 ```
 
-## 🔐 Security
-- All endpoints require an API key via the `X-API-Key` header (except `/webhook/happyrobot` and health endpoints)
-- Default API key: `test-api-key` (change via `API_KEY` environment variable)
-- HTTPS enabled by default on Fly.io deployment
+## 🔐 Environment Configuration
+
+### Quick Setup
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Edit .env with your credentials
+nano .env
+
+# 3. Run setup script
+./start.sh
+```
+
+### Environment Variables
+All sensitive configuration is stored in environment variables:
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `API_KEY` | API authentication key | ✅ Yes | - |
+| `FMCSA_API_TOKEN` | FMCSA API authentication token | ✅ Yes | - |
+| `API_URL` | Base API URL | No | `http://localhost:8000` |
+| `PORT` | Server port | No | `8000` |
+| `ENVIRONMENT` | Environment type | No | `development` |
+| `LOG_LEVEL` | Logging level | No | `INFO` |
+
+### Security Features
+- ✅ No hardcoded credentials in source code
+- ✅ Environment variables validation on startup
+- ✅ `.env` file in `.gitignore` 
+- ✅ `.env.example` template provided
+- ✅ Centralized configuration management
 
 ## 🐳 Local Development
 
 ### Using Docker
-1. Build the Docker image:
+1. Copy environment file:
+   ```sh
+   cp .env.example .env
+   nano .env  # Edit with your credentials
+   ```
+2. Build the Docker image:
    ```sh
    docker build -t happyrobot-inbound .
    ```
-2. Run the container:
+3. Run the container:
    ```sh
-   docker run -p 8000:8000 -e API_KEY=test-api-key happyrobot-inbound
+   docker run -p 8000:8000 --env-file .env happyrobot-inbound
    ```
-3. Access the API at `http://localhost:8000`
 
 ### Direct Python
-1. Install dependencies:
+1. Set up environment:
    ```sh
+   ./start.sh  # Automated setup script
+   ```
+   Or manually:
+   ```sh
+   cp .env.example .env
+   nano .env  # Edit with your credentials
+   python -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
 2. Run the application:
@@ -92,6 +132,7 @@ fly scale count 2
 Set via Fly.io secrets:
 ```sh
 fly secrets set API_KEY=your-secure-api-key
+fly secrets set FMCSA_API_TOKEN=your-fmcsa-token
 ```
 
 ## 🔗 HappyRobot Integration
@@ -128,24 +169,30 @@ streamlit run dashboard.py
 ## 📁 Project Structure
 ```
 ├── main.py              # FastAPI application entry point
+├── agent.py             # Carrier agent logic
+├── dashboard.py         # Streamlit dashboard
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile          # Container configuration
 ├── fly.toml            # Fly.io deployment config
-├── dashboard.py        # Streamlit dashboard
+├── README.md           # Project documentation
+├── start.sh            # Development setup script
+├── .env                # Environment variables (not in git)
+├── .env.example        # Environment template
 ├── api/                # API route modules
+│   ├── __init__.py
 │   ├── loads.py        # Load search endpoints
 │   ├── negotiation.py  # Negotiation logging
 │   ├── webhook.py      # HappyRobot webhook
-│   └── auth.py         # Authentication endpoints
+│   └── auth.py         # MC verification endpoints
 ├── core/               # Core utilities
-│   ├── config.py       # Configuration management
+│   ├── __init__.py
+│   ├── config.py       # Centralized configuration
 │   └── security.py     # API key validation
-├── data/               # Data files
-│   └── loads.json      # Sample load data
-└── models/             # Data models
-    ├── load.py         # Load data structures
-    ├── mc.py           # MC verification models
-    └── negotiation.py  # Negotiation models
+├── services/           # Business services
+│   ├── __init__.py
+│   └── fmcsa.py        # FMCSA API integration
+└── data/               # Data files
+    └── loads.json      # Sample load data
 ```
 
 ## 🛠️ Technical Features
@@ -155,12 +202,21 @@ streamlit run dashboard.py
 - Error handling for graceful degradation
 - Optimized Docker build with layer caching
 - Health checks with appropriate timeouts
+- Cleaned codebase with no duplicate files
 
 ### Reliability Features
 - Automatic rollback on failed deployments
 - HTTP health checks every 15 seconds
 - 60-second grace period for startup
 - Error isolation between API modules
+- Real FMCSA API integration with fallback handling
+
+### FMCSA Integration Features
+- Real-time motor carrier verification
+- Comprehensive carrier eligibility checking
+- Safety rating retrieval
+- Graceful API failure handling
+- Detailed rejection reason reporting
 
 ## 🚀 Scaling & Maintenance
 
@@ -195,4 +251,7 @@ For technical support or questions:
 - Review Fly.io dashboard for performance metrics
 
 ---
-**Deployment Status**: ✅ Live Production
+
+**Last Updated**: September 17, 2025  
+**Deployment Status**: ✅ Live Production  
+**Codebase Status**: ✅ Cleaned & Optimized
