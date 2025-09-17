@@ -27,3 +27,4 @@ try:
         st.json(line)
 except FileNotFoundError:
     st.info("No negotiations logged yet.")
+
