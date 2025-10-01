@@ -1,13 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException
 from core.security import get_api_key
 from services.fmcsa import FMCSAService
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from typing import Union
 
 router = APIRouter()
 fmcsa_service = FMCSAService()
 
 class MCVerificationRequest(BaseModel):
-    mc_number: str
+    mc_number: Union[str, int]
+    
+    @field_validator('mc_number', mode='before')
+    @classmethod
+    def convert_mc_number_to_string(cls, v):
+        """Convert MC number to string regardless of input type"""
+        if isinstance(v, (int, float)):
+            return str(int(v))  # Convert to int first to remove decimal, then to string
+        elif isinstance(v, str):
+            return v.strip()  # Remove any whitespace
+        else:
+            raise ValueError("MC number must be a string or number")
 
 @router.post("/verify_mc", dependencies=[Depends(get_api_key)])
 def verify_mc(request: MCVerificationRequest):

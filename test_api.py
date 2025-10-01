@@ -49,6 +49,36 @@ def test_loads_endpoint_invalid_auth():
     response = client.get("/loads", headers=headers)
     assert response.status_code == 403
 
+def test_mc_number_conversion():
+    """Test MC number conversion from integer to string"""
+    headers = {"X-API-Key": "test-api-key"}
+    
+    with patch('services.fmcsa.FMCSAService.verify_mc_number') as mock_verify:
+        mock_verify.return_value = {
+            "eligible": True,
+            "mc_number": "123456",
+            "status": "verified",
+            "legal_name": "Test Carrier LLC"
+        }
+        
+        # Test with integer MC number
+        test_data = {"mc_number": 123456}
+        response = client.post("/verify_mc", json=test_data, headers=headers)
+        assert response.status_code == 200
+        
+        # Verify the service was called with string
+        mock_verify.assert_called_with("123456")
+        
+        # Test with float MC number  
+        test_data = {"mc_number": 123456.0}
+        response = client.post("/verify_mc", json=test_data, headers=headers)
+        assert response.status_code == 200
+        
+        # Test with string MC number
+        test_data = {"mc_number": "654321"}
+        response = client.post("/verify_mc", json=test_data, headers=headers)
+        assert response.status_code == 200
+
 def test_webhook_endpoint():
     """Test the webhook endpoint"""
     with patch('services.fmcsa.FMCSAService.verify_mc_number') as mock_verify:

@@ -1,5 +1,6 @@
 import requests
 import os
+import time
 from typing import Dict, Optional
 import logging
 from core.config import Config
@@ -14,13 +15,30 @@ class FMCSAService:
         if not self.api_token:
             raise ValueError("FMCSA_API_TOKEN environment variable is required")
         self.base_url = Config.FMCSA_BASE_URL
+        self._cache = {}  # Simple in-memory cache
+        self._cache_ttl = 300  # 5 minutes cache
 
-    def verify_mc_number(self, mc_number: str) -> Dict:
+    def verify_mc_number(self, mc_number) -> Dict:
         """
         Verify MC number using FMCSA API (docket-number endpoint)
+        Accepts both string and numeric MC numbers
         """
         try:
+            # Convert to string if it's a number
+            if isinstance(mc_number, (int, float)):
+                mc_number = str(int(mc_number))
+            elif not isinstance(mc_number, str):
+                mc_number = str(mc_number)
+            
             clean_mc = mc_number.replace('MC-', '').replace('MC', '').strip()
+            
+            # Check cache first
+            cache_key = f"mc_{clean_mc}"
+            if cache_key in self._cache:
+                cached_result, cached_time = self._cache[cache_key]
+                if time.time() - cached_time < self._cache_ttl:
+                    logger.info(f"Using cached result for MC: {clean_mc}")
+                    return cached_result
             url = f"{self.base_url}/docket-number/{clean_mc}?webKey={self.api_token}"
 
             headers = {
@@ -29,8 +47,12 @@ class FMCSAService:
             }
 
             logger.info(f"Querying FMCSA API for MC: {clean_mc}")
+            start_time = time.time()
 
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=5)  # Reduced timeout
+            
+            end_time = time.time()
+            logger.info(f"FMCSA API response time: {end_time - start_time:.2f} seconds")
 
             if response.status_code == 200:
                 data = response.json()
@@ -43,14 +65,20 @@ class FMCSAService:
                         "message": "MC number not found in FMCSA database"
                     }
                 # Pass the first carrier record to processor
-                return self._process_carrier_data(content[0].get('carrier', {}), clean_mc)
+                result = self._process_carrier_data(content[0].get('carrier', {}), clean_mc)
+                # Cache the result
+                self._cache[cache_key] = (result, time.time())
+                return result
             elif response.status_code == 404:
-                return {
+                result = {
                     "eligible": False,
                     "mc_number": clean_mc,
                     "status": "not_found",
                     "message": "MC number not found in FMCSA database"
                 }
+                # Cache negative results too
+                self._cache[cache_key] = (result, time.time())
+                return result
             else:
                 logger.error(f"FMCSA API error: {response.status_code} - {response.text}")
                 return self._fallback_verification(clean_mc)

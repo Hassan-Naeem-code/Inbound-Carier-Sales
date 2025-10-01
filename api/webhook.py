@@ -6,7 +6,14 @@ router = APIRouter()
 @router.post("/webhook/happyrobot")
 async def happyrobot_webhook(payload: dict):
     agent = CarrierAgent()
+    
+    # Convert MC number to string if it's a number
     mc_number = payload.get("mc_number")
+    if isinstance(mc_number, (int, float)):
+        mc_number = str(int(mc_number))
+    elif isinstance(mc_number, str):
+        mc_number = mc_number.strip()
+    
     equipment_type = payload.get("equipment_type")
     origin = payload.get("origin")
     destination = payload.get("destination")

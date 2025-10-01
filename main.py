@@ -38,6 +38,12 @@ except Exception as e:
     print(f"Error loading webhook router: {e}")
 
 try:
+    from api.fast_test import router as fast_test_router
+    app.include_router(fast_test_router)
+except Exception as e:
+    print(f"Error loading fast test router: {e}")
+
+try:
     from api.auth import router as auth_router
     app.include_router(auth_router)
 except Exception as e:
