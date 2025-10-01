@@ -32,6 +32,16 @@ class FMCSAService:
             
             clean_mc = mc_number.replace('MC-', '').replace('MC', '').strip()
             
+            # Validate MC number format before API call
+            if not clean_mc.isdigit():
+                logger.warning(f"Invalid MC number format: {clean_mc}")
+                return {
+                    "eligible": False,
+                    "mc_number": clean_mc,
+                    "status": "invalid_format",
+                    "message": "MC number must be numeric"
+                }
+            
             # Check cache first
             cache_key = f"mc_{clean_mc}"
             if cache_key in self._cache:
@@ -47,12 +57,32 @@ class FMCSAService:
             }
 
             logger.info(f"Querying FMCSA API for MC: {clean_mc}")
-            start_time = time.time()
-
-            response = requests.get(url, headers=headers, timeout=5)  # Reduced timeout
             
-            end_time = time.time()
-            logger.info(f"FMCSA API response time: {end_time - start_time:.2f} seconds")
+            # Retry logic for transient errors
+            max_retries = 2
+            for attempt in range(max_retries + 1):
+                try:
+                    start_time = time.time()
+                    response = requests.get(url, headers=headers, timeout=5)
+                    end_time = time.time()
+                    logger.info(f"FMCSA API response time: {end_time - start_time:.2f} seconds (attempt {attempt + 1})")
+                    
+                    # If we get a response, break out of retry loop
+                    break
+                    
+                except requests.exceptions.Timeout:
+                    logger.warning(f"FMCSA API timeout on attempt {attempt + 1}")
+                    if attempt == max_retries:
+                        logger.error(f"FMCSA API timeout after {max_retries + 1} attempts for MC: {clean_mc}")
+                        return self._intelligent_fallback_verification(clean_mc, "API timeout after retries")
+                    time.sleep(0.5 * (attempt + 1))  # Exponential backoff
+                    
+                except requests.exceptions.RequestException as e:
+                    logger.warning(f"FMCSA API request error on attempt {attempt + 1}: {str(e)}")
+                    if attempt == max_retries:
+                        logger.error(f"FMCSA API request failed after {max_retries + 1} attempts: {str(e)}")
+                        return self._intelligent_fallback_verification(clean_mc, f"Request error: {str(e)}")
+                    time.sleep(0.5 * (attempt + 1))  # Exponential backoff
 
             if response.status_code == 200:
                 data = response.json()
@@ -80,18 +110,27 @@ class FMCSAService:
                 self._cache[cache_key] = (result, time.time())
                 return result
             else:
-                logger.error(f"FMCSA API error: {response.status_code} - {response.text}")
-                return self._fallback_verification(clean_mc)
+                error_message = response.text
+                logger.error(f"FMCSA API error: {response.status_code} - {error_message}")
+                
+                # Try to parse error details
+                try:
+                    error_data = response.json()
+                    error_id = error_data.get('content', 'Unknown error')
+                    if 'Error ID:' in error_id:
+                        logger.error(f"FMCSA Error ID: {error_id}")
+                except:
+                    pass
+                
+                # For 500 errors, use intelligent fallback instead of basic validation
+                if response.status_code >= 500:
+                    return self._intelligent_fallback_verification(clean_mc, "FMCSA API server error")
+                else:
+                    return self._fallback_verification(clean_mc)
 
-        except requests.exceptions.Timeout:
-            logger.error(f"FMCSA API timeout for MC: {clean_mc}")
-            return self._fallback_verification(clean_mc)
-        except requests.exceptions.RequestException as e:
-            logger.error(f"FMCSA API request error: {str(e)}")
-            return self._fallback_verification(clean_mc)
         except Exception as e:
             logger.error(f"Unexpected error in FMCSA verification: {str(e)}")
-            return self._fallback_verification(clean_mc)
+            return self._intelligent_fallback_verification(clean_mc, f"Unexpected error: {str(e)}")
 
     def _process_carrier_data(self, carrier: Dict, mc_number: str) -> Dict:
         """Process FMCSA API carrier data dict"""
@@ -131,8 +170,43 @@ class FMCSAService:
             logger.error(f"Error processing carrier data: {str(e)}")
             return self._fallback_verification(mc_number)
 
+    def _intelligent_fallback_verification(self, mc_number: str, reason: str) -> Dict:
+        """Intelligent fallback when FMCSA API has server errors"""
+        # More sophisticated validation for known patterns
+        if not mc_number.isdigit():
+            return {
+                "eligible": False,
+                "mc_number": mc_number,
+                "status": "invalid_format",
+                "message": "Invalid MC number format - must be numeric"
+            }
+        
+        mc_int = int(mc_number)
+        
+        # Basic range validation (MC numbers are typically 6-7 digits)
+        if mc_int < 1000 or mc_int > 9999999:
+            return {
+                "eligible": False,
+                "mc_number": mc_number,
+                "status": "invalid_range",
+                "message": "MC number outside valid range"
+            }
+        
+        # For API server errors, be more conservative but still allow processing
+        return {
+            "eligible": True,
+            "mc_number": mc_number,
+            "status": "api_server_error",
+            "message": f"FMCSA API temporarily unavailable ({reason}). MC format appears valid.",
+            "legal_name": "Unknown (API Error)",
+            "dba_name": None,
+            "operating_status": "Unknown",
+            "out_of_service_date": None,
+            "fallback_reason": reason
+        }
+
     def _fallback_verification(self, mc_number: str) -> Dict:
-        """Fallback verification when API is unavailable"""
+        """Basic fallback verification when API is unavailable"""
         # Basic validation - check if MC number is numeric and reasonable length
         if mc_number.isdigit() and 4 <= len(mc_number) <= 7:
             return {
