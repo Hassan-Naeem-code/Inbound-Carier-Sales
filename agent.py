@@ -21,7 +21,7 @@ class CarrierAgent:
         except Exception as e:
             # Fallback to API endpoint if direct service fails
             try:
-                resp = requests.post(f"{API_URL}/verify_mc", json={"mc_number": mc_number}, headers=HEADERS)
+                resp = requests.post(f"{API_URL}/verify_mc", json={"mc_number": mc_number}, headers=HEADERS, timeout=10)
                 return resp.json()
             except:
                 return {
@@ -32,15 +32,14 @@ class CarrierAgent:
                 }
 
     def search_loads(self, equipment_type=None, origin=None, destination=None):
-        params = {}
-        if equipment_type:
-            params["equipment_type"] = equipment_type
-        if origin:
-            params["origin"] = origin
-        if destination:
-            params["destination"] = destination
-        resp = requests.get(f"{API_URL}/loads", params=params, headers=HEADERS)
-        return resp.json()
+        # Directly import and call the loads logic to avoid HTTP self-call deadlock
+        try:
+            from api.loads import get_loads
+            # get_loads returns a list of dicts
+            return get_loads(equipment_type=equipment_type, origin=origin, destination=destination)
+        except Exception as e:
+            print(f"Failed to get loads directly: {e}")
+            return []
 
     def negotiate(self, load, initial_offer, max_rounds=3):
         counter = load["loadboard_rate"]
@@ -72,4 +71,7 @@ class CarrierAgent:
             return "Neutral"
 
     def log_negotiation(self, data):
-        requests.post(f"{API_URL}/log_negotiation", json=data, headers=HEADERS)
+        try:
+            requests.post(f"{API_URL}/log_negotiation", json=data, headers=HEADERS, timeout=10)
+        except Exception as e:
+            print(f"Failed to log negotiation: {e}")
