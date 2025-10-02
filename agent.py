@@ -43,6 +43,11 @@ class CarrierAgent:
 
     def negotiate(self, load, initial_offer, max_rounds=3):
         counter = load["loadboard_rate"]
+        # Convert initial_offer to int if it's a string
+        try:
+            initial_offer = int(initial_offer)
+        except (ValueError, TypeError):
+            initial_offer = 0  # or handle as you wish
         rounds = 0
         accepted = False
         negotiation_history = []
