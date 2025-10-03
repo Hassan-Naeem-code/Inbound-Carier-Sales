@@ -48,7 +48,7 @@ python3 -c "from core.config import Config; print('✅ Configuration validated s
 echo ""
 echo "🎉 Setup complete! You can now run:"
 echo "   📖 API Documentation: uvicorn main:app --reload"
-echo "   📊 Dashboard: streamlit run dashboard.py"
+echo "   📊 Dashboard: http://localhost:8000/dashboard (once API is running)"
 echo "   🐳 Docker: docker build -t happyrobot-local ."
 
 # Ask if user wants to start the API

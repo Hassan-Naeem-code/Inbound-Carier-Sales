@@ -47,17 +47,33 @@ async def happyrobot_webhook(payload: dict):
         logger.info(f"📭 WEBHOOK Result: {json.dumps(no_loads_response, indent=2)}")
         return no_loads_response
     chosen_load = loads[0]
+    
+    # Log the load that was selected
+    logger.info(f"🚚 Selected load: {json.dumps(chosen_load, indent=2)}")
+    
+    # Handle negotiation
+    logger.info(f"💰 Starting negotiation with initial offer: {initial_offer}")
     negotiation = agent.negotiate(chosen_load, initial_offer=initial_offer)
+    logger.info(f"📝 Negotiation result: {json.dumps(negotiation, indent=2)}")
+    
     outcome = agent.classify_outcome(negotiation)
     sentiment = agent.classify_sentiment(call_transcript)
+    
     log_data = {
         "mc_number": mc_number,
         "load_id": chosen_load["load_id"],
         **negotiation,
         "outcome": outcome,
-        "sentiment": sentiment
+        "sentiment": sentiment,
+        "equipment_type": equipment_type,
+        "origin": origin,
+        "destination": destination
     }
+    
+    # Log the negotiation data for analytics
+    logger.info(f"📊 Logging negotiation data: {json.dumps(log_data, indent=2)}")
     agent.log_negotiation(log_data)
+    
     transfer_to_sales_rep = outcome == "Deal Closed"
     
     final_response = {

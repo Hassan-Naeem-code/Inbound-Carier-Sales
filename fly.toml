@@ -1,7 +1,5 @@
-# fly.toml app configuration file generated for happyrobot-inbound on 2025-09-15T13:36:06-04:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# fly.toml for multi-service configuration (API + Dashboard)
+# Replace your existing fly.toml with this file when ready to deploy both services
 
 app = 'happyrobot-inbound'
 primary_region = 'ord'
@@ -17,10 +15,12 @@ primary_region = 'ord'
 [[services]]
   protocol = 'tcp'
   internal_port = 8000
+  processes = ['app']
 
   [[services.ports]]
     port = 80
     handlers = ['http']
+    force_https = true
 
   [[services.ports]]
     port = 443
@@ -33,6 +33,20 @@ primary_region = 'ord'
     grace_period = '60s'
     method = 'GET'
     path = '/health'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 8501
+  processes = ['app']
+
+  [[services.ports]]
+    port = 8501
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 8502
+    handlers = ['tls', 'http']
 
 [[vm]]
   memory = '1gb'

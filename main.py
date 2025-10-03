@@ -42,6 +42,12 @@ def health_check():
 # Root endpoint
 @app.get("/")
 def read_root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/dashboard")
+
+# API info endpoint
+@app.get("/api_info")
+def api_info():
     return {"message": "HappyRobot Inbound Carrier API", "status": "running"}
 
 # Import routers with error handling
@@ -64,22 +70,17 @@ except Exception as e:
     print(f"Error loading webhook router: {e}")
 
 try:
-    from api.fast_test import router as fast_test_router
-    app.include_router(fast_test_router)
-except Exception as e:
-    print(f"Error loading fast test router: {e}")
-
-try:
-    from api.fmcsa_debug import router as fmcsa_debug_router
-    app.include_router(fmcsa_debug_router)
-except Exception as e:
-    print(f"Error loading FMCSA debug router: {e}")
-
-try:
     from api.auth import router as auth_router
     app.include_router(auth_router)
 except Exception as e:
     print(f"Error loading auth router: {e}")
+    
+# Import dashboard view router
+try:
+    from api.dashboard_view import router as dashboard_router
+    app.include_router(dashboard_router)
+except Exception as e:
+    print(f"Error loading dashboard router: {e}")
 
 if __name__ == "__main__":
     import uvicorn

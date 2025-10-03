@@ -42,6 +42,43 @@ class CarrierAgent:
             return []
 
     def negotiate(self, load, initial_offer, max_rounds=3):
+        """
+        Negotiate a load rate by calling the negotiation API endpoint
+        
+        Args:
+            load (dict): The load information including loadboard_rate
+            initial_offer: The carrier's initial offer
+            max_rounds (int): Maximum number of negotiation rounds
+            
+        Returns:
+            dict: Negotiation result with accepted status, final rate, and history
+        """
+        try:
+            # Try using the dedicated negotiation API endpoint
+            payload = {
+                "load_id": load["load_id"],
+                "loadboard_rate": load["loadboard_rate"],
+                "initial_offer": initial_offer,
+                "max_rounds": max_rounds
+            }
+            
+            response = requests.post(
+                f"{API_URL}/negotiate", 
+                json=payload, 
+                headers=HEADERS, 
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Negotiation API failed with status {response.status_code}: {response.text}")
+                # Fall back to local implementation
+        except Exception as e:
+            print(f"Failed to use negotiation API: {e}")
+            # Fall back to local implementation
+        
+        # Fallback negotiation logic (if API call fails)
         counter = load["loadboard_rate"]
         # Convert initial_offer to int if it's a string
         try:

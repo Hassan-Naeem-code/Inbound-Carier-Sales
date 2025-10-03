@@ -99,9 +99,9 @@ All sensitive configuration is stored in environment variables:
    ```sh
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-3. Run the dashboard:
-   ```sh
-   streamlit run dashboard.py
+3. Access the dashboard:
+   ```
+   http://localhost:8000/dashboard
    ```
 
 ## ☁️ Production Deployment (Fly.io)
@@ -160,17 +160,17 @@ Configure the HappyRobot platform to POST call data to the webhook endpoint:
 - **Status Page**: Available through Fly.io dashboard
 - **Logs**: `fly logs --app happyrobot-inbound`
 
-### Local Dashboard
-Run the Streamlit dashboard for metrics visualization:
-```sh
-streamlit run dashboard.py
+### Dashboard
+The dashboard is integrated into the FastAPI application and can be accessed at:
+```
+https://happyrobot-inbound.fly.dev/dashboard
 ```
 
 ## 📁 Project Structure
 ```
 ├── main.py              # FastAPI application entry point
 ├── agent.py             # Carrier agent logic
-├── dashboard.py         # Streamlit dashboard
+├── api/dashboard_view.py # Integrated dashboard
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile          # Container configuration
 ├── fly.toml            # Fly.io deployment config
