@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from typing import List
 import json
 import os
@@ -35,3 +35,35 @@ def get_load(load_id: str):
         if l["load_id"] == load_id:
             return l
     raise HTTPException(status_code=404, detail="Load not found")
+
+@router.post("/search_loads", dependencies=[Depends(get_api_key)])
+async def search_loads(request: Request):
+    """Search loads by equipment_type, origin, and destination from JSON body"""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No JSON body provided. Required keys: equipment_type, origin, destination."
+        )
+
+    required_keys = ["equipment_type", "origin", "destination"]
+    missing = [k for k in required_keys if k not in body or not body[k]]
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Missing required keys: {', '.join(missing)}"
+        )
+
+    equipment_type = body.get("equipment_type")
+    origin = body.get("origin")
+    destination = body.get("destination")
+    loads = get_loads_data()
+    results = loads
+    if equipment_type:
+        results = [l for l in results if l["equipment_type"].lower() == equipment_type.lower()]
+    if origin:
+        results = [l for l in results if origin.lower() in l["origin"].lower()]
+    if destination:
+        results = [l for l in results if destination.lower() in l["destination"].lower()]
+    return results
